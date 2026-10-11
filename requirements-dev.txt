@@ -1,0 +1,2 @@
+# Only needed for run_local.py (embedded PostgreSQL, no system install)
+pgserver>=0.1.4

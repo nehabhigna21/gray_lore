@@ -1,0 +1,27 @@
+# Render Blueprint: one web service + one PostgreSQL database.
+# In Render: New + → Blueprint → pick this repo → Apply. That's the whole deploy.
+services:
+  - type: web
+    name: graylore
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python init_db.py --if-empty && gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --threads 4
+    healthCheckPath: /auth
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: graylore-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: GRAYLORE_REGION
+        value: IN
+      - key: PYTHON_VERSION
+        value: 3.12.7
+
+databases:
+  - name: graylore-db
+    plan: free
+    databaseName: graylore
+    user: graylore
