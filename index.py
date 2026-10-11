@@ -1,7 +1,4 @@
-"""
-Vercel entry point. Vercel's Python runtime looks for a WSGI `app` in api/index.py and
-vercel.json routes every request here. The real application lives in ../app.py.
-"""
+
 import os
 import sys
 
@@ -14,11 +11,7 @@ FUNCTION_PREFIX = "/api/index"
 
 
 def app(environ, start_response):
-    """
-    WSGI wrapper. Depending on how Vercel routes the request, PATH_INFO can arrive as
-    the function's own path (/api/index or /api/index/...) instead of the URL the
-    visitor typed. Normalise it so Flask always sees the real path.
-    """
+   
     path = environ.get("PATH_INFO", "") or "/"
     if path == FUNCTION_PREFIX or path == FUNCTION_PREFIX + ".py":
         path = "/"
