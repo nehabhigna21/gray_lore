@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Graylore — Who's Watching</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#0A0E1A;
+    --glass:rgba(255,255,255,0.06);
+    --glass-hover:rgba(255,255,255,0.1);
+    --border:rgba(255,255,255,0.12);
+    --blue:#DC2626;
+    --violet:#F87171;
+    --text:#F5F7FA;
+    --muted:#9AA3B2;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background:var(--bg); color:var(--text);
+    font-family:'Inter',sans-serif; overflow-x:hidden; position:relative;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:40px 20px;
+  }
+  .blob{
+    position:fixed; border-radius:50%; filter:blur(90px); z-index:0; opacity:0.35;
+  }
+  .blob-1{ width:520px; height:520px; background:var(--blue); top:-160px; left:-120px; }
+  .blob-2{ width:460px; height:460px; background:var(--violet); bottom:-180px; right:-100px; }
+
+  .brand{
+    position:relative; z-index:2; display:flex; align-items:center; gap:9px;
+    font-family:'Fraunces',serif; font-weight:600; font-size:22px; margin-bottom:56px;
+  }
+  .brand svg{ width:28px; height:19px; }
+  .grad-text{
+    background:linear-gradient(90deg, var(--blue), var(--violet));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+
+  h1{
+    position:relative; z-index:2;
+    font-family:'Fraunces',serif; font-weight:500; font-size:30px; margin:0 0 40px;
+    letter-spacing:-0.01em;
+  }
+
+  /* Loader */
+  .loader{
+    position:fixed; inset:0; z-index:200; background:var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    animation:loaderFade 0.5s ease 1.9s forwards;
+  }
+  @keyframes loaderFade{ to{ opacity:0; visibility:hidden; } }
+  .ticket-svg{ width:150px; height:100px; }
+  .ticket-path{
+    fill:none; stroke:url(#loaderGrad); stroke-width:2.5;
+    stroke-dasharray:520; stroke-dashoffset:520; animation:draw 1.2s ease forwards;
+  }
+  @keyframes draw{ to{ stroke-dashoffset:0; } }
+  .ticket-half-left{ animation:tearLeft 0.5s ease 1.3s forwards; }
+  .ticket-half-right{ animation:tearRight 0.5s ease 1.3s forwards; }
+  @keyframes tearLeft{ to{ transform:translate(-14px,-6px) rotate(-6deg); opacity:0; } }
+  @keyframes tearRight{ to{ transform:translate(14px,6px) rotate(6deg); opacity:0; } }
+  .loader-wordmark{
+    position:absolute; bottom:35%;
+    font-family:'Fraunces',serif; font-weight:600; font-size:15px; letter-spacing:0.1em;
+    color:var(--muted); opacity:0; animation:fadeInWord 0.4s ease 0.3s forwards;
+  }
+  @keyframes fadeInWord{ to{ opacity:1; } }
+  .page{ opacity:0; animation:pageIn 0.5s ease 2.1s forwards; }
+  @keyframes pageIn{ to{ opacity:1; } }
+
+  .profiles{
+    position:relative; z-index:2;
+    display:flex; gap:28px; flex-wrap:wrap; justify-content:center; max-width:700px;
+  }
+  .profile{
+    display:flex; flex-direction:column; align-items:center; gap:12px; cursor:pointer;
+  }
+  .avatar{
+    width:110px; height:110px; border-radius:22px;
+    background:var(--glass);
+    backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+    border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces',serif; font-size:32px; font-weight:600;
+    transition:all .25s ease;
+    position:relative; overflow:hidden;
+  }
+  .avatar::before{
+    content:""; position:absolute; inset:0; opacity:0.5;
+  }
+  .profile:hover .avatar{
+    border-color:var(--blue); transform:translateY(-6px);
+    box-shadow:0 16px 40px rgba(14,165,233,0.25);
+  }
+  .avatar.p1::before{ background:linear-gradient(135deg, var(--blue), transparent); }
+  .avatar.p2::before{ background:linear-gradient(135deg, var(--violet), transparent); }
+  .avatar.p3::before{ background:linear-gradient(135deg, #F472B6, transparent); }
+  .avatar span{ position:relative; z-index:1; }
+  .kids-tag{
+    position:absolute; bottom:6px; left:50%; transform:translateX(-50%);
+    background:rgba(0,0,0,0.35); font-size:8px; font-weight:700; letter-spacing:0.06em;
+    padding:2px 8px; border-radius:10px; color:var(--blue); z-index:1;
+  }
+  .profile-name{ font-size:14px; color:var(--muted); font-weight:500; transition:color .2s; }
+  .profile:hover .profile-name{ color:var(--text); }
+
+  .add-profile .avatar{
+    background:transparent; border:1.5px dashed var(--border);
+  }
+  .add-profile .avatar span{ font-size:36px; color:var(--muted); font-family:'Inter',sans-serif; font-weight:300; }
+  .add-profile:hover .avatar{ border-color:var(--blue); }
+
+  .manage-btn{
+    position:relative; z-index:2; margin-top:48px;
+    background:transparent; border:1px solid var(--border); color:var(--muted);
+    padding:10px 24px; border-radius:8px; font-size:13px; font-family:'Inter',sans-serif;
+    letter-spacing:0.04em; cursor:pointer; transition:all .2s;
+  }
+  .manage-btn:hover{ border-color:var(--text); color:var(--text); }
+  .field-hidden{ display:none !important; }
+</style>
+</head>
+<body>
+
+  <div class="loader">
+    <div class="loader-wordmark">GRAYLORE</div>
+    <svg class="ticket-svg" viewBox="0 0 150 100">
+      <defs><linearGradient id="loaderGrad" x1="0" y1="0" x2="150" y2="0"><stop offset="0" stop-color="#DC2626"/><stop offset="1" stop-color="#F87171"/></linearGradient></defs>
+      <g class="ticket-half-left">
+        <path class="ticket-path" d="M10,20 h130 a6,6 0 0 1 6,6 a10,10 0 0 0 0,20 a6,6 0 0 1 -6,6 v0"/>
+      </g>
+      <g class="ticket-half-right">
+        <path class="ticket-path" d="M140,52 v22 a6,6 0 0 1 -6,6 h-130 a6,6 0 0 1 -6,-6 a10,10 0 0 0 0,-20 a6,6 0 0 1 6,-6" style="animation-delay:0.15s;"/>
+      </g>
+      <line x1="75" y1="20" x2="75" y2="80" stroke="#F87171" stroke-width="1.5" stroke-dasharray="4,4" opacity="0.6"/>
+    </svg>
+  </div>
+
+  <div class="page">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <div class="brand">
+    <svg viewBox="0 0 40 26" fill="none">
+      <path d="M2,4 h36 a2,2 0 0 1 2,2 a4,4 0 0 0 0,8 a2,2 0 0 1 -2,2 h-36 a2,2 0 0 1 -2,-2 a4,4 0 0 0 0,-8 a2,2 0 0 1 2,-2 z" stroke="url(#g1)" stroke-width="1.6"/>
+      <line x1="20" y1="4" x2="20" y2="22" stroke="url(#g1)" stroke-width="1" stroke-dasharray="2,2" opacity="0.6"/>
+      <defs>
+        <linearGradient id="g1" x1="0" y1="0" x2="40" y2="0">
+          <stop offset="0" stop-color="#DC2626"/>
+          <stop offset="1" stop-color="#F87171"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    Gray<span class="grad-text">lore</span>
+  </div>
+
+  <h1>Who's watching?</h1>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div style="margin:0 auto 18px; max-width:520px; padding:10px 16px; border-radius:12px; background:rgba(220,38,38,0.14); border:1px solid rgba(248,113,113,0.4); font-size:13px; text-align:center;">
+      {% for msg in messages %}<div>{{ msg }}</div>{% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="profiles">
+    {% for p in profiles %}
+    <div class="profile" onclick="window.location.href='/select_profile/{{ p.profile_id }}'">
+      <div class="avatar {{ 'p3' if p.is_kids else ('p1' if loop.index0 % 2 == 0 else 'p2') }}">
+        <span>{{ p.profile_name[0] | upper }}</span>
+        {% if p.is_kids %}<div class="kids-tag">KIDS</div>{% endif %}
+      </div>
+      <div class="profile-name">{{ p.profile_name }}</div>
+    </div>
+    {% endfor %}
+    <div class="profile add-profile" onclick="document.getElementById('add-profile-form').classList.toggle('field-hidden')">
+      <div class="avatar"><span>+</span></div>
+      <div class="profile-name">Add Profile</div>
+    </div>
+  </div>
+
+  <form id="add-profile-form" method="POST" action="/profiles" class="field-hidden" style="margin-top:24px; display:flex; gap:10px; align-items:center;">
+    <input type="text" name="profile_name" placeholder="Profile name" required
+      style="padding:10px 14px; background:var(--glass); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'Inter',sans-serif;">
+    <label style="color:var(--muted); font-size:12px; display:flex; align-items:center; gap:6px;">
+      <input type="checkbox" name="is_kids"> Kids profile
+    </label>
+    <button type="submit" class="manage-btn" style="border-color:var(--blue); color:var(--text);">Create</button>
+  </form>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Graylore — Sign In</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#0A0E1A;
+    --glass:rgba(255,255,255,0.06);
+    --glass-2:rgba(255,255,255,0.09);
+    --border:rgba(255,255,255,0.12);
+    --blue:#DC2626;
+    --violet:#F87171;
+    --text:#F5F7FA;
+    --muted:#9AA3B2;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background:var(--bg); color:var(--text);
+    font-family:'Inter',sans-serif; display:flex; align-items:center; justify-content:center;
+    position:relative; overflow:hidden; padding:24px;
+  }
+  .blob{ position:fixed; border-radius:50%; filter:blur(100px); z-index:0; opacity:0.4; }
+  .blob-1{ width:560px; height:560px; background:var(--blue); top:-200px; left:-180px; }
+  .blob-2{ width:480px; height:480px; background:var(--violet); bottom:-200px; right:-140px; }
+
+  .brand{
+    position:absolute; top:36px; left:50%; transform:translateX(-50%); z-index:2;
+    display:flex; align-items:center; gap:8px; font-family:'Fraunces',serif; font-weight:600; font-size:21px;
+  }
+  .brand svg{ width:26px; height:18px; }
+  .grad-text{ background:linear-gradient(90deg, var(--blue), var(--violet)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+  /* Loader */
+  .loader{
+    position:fixed; inset:0; z-index:200; background:var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    animation:loaderFade 0.5s ease 1.9s forwards;
+  }
+  @keyframes loaderFade{ to{ opacity:0; visibility:hidden; } }
+  .ticket-svg{ width:150px; height:100px; }
+  .ticket-path{
+    fill:none; stroke:url(#loaderGrad); stroke-width:2.5;
+    stroke-dasharray:520; stroke-dashoffset:520; animation:draw 1.2s ease forwards;
+  }
+  @keyframes draw{ to{ stroke-dashoffset:0; } }
+  .ticket-half-left{ animation:tearLeft 0.5s ease 1.3s forwards; }
+  .ticket-half-right{ animation:tearRight 0.5s ease 1.3s forwards; }
+  @keyframes tearLeft{ to{ transform:translate(-14px,-6px) rotate(-6deg); opacity:0; } }
+  @keyframes tearRight{ to{ transform:translate(14px,6px) rotate(6deg); opacity:0; } }
+  .loader-wordmark{
+    position:absolute; bottom:35%;
+    font-family:'Fraunces',serif; font-weight:600; font-size:15px; letter-spacing:0.1em;
+    color:var(--muted); opacity:0; animation:fadeInWord 0.4s ease 0.3s forwards;
+  }
+  @keyframes fadeInWord{ to{ opacity:1; } }
+  .page{ opacity:0; animation:pageIn 0.5s ease 2.1s forwards; }
+  @keyframes pageIn{ to{ opacity:1; } }
+
+  .card{
+    position:relative; z-index:2; width:100%; max-width:400px;
+    background:var(--glass); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+    border:1px solid var(--border); border-radius:20px;
+    padding:38px 34px 30px;
+    box-shadow:0 30px 80px rgba(0,0,0,0.5);
+  }
+  .toggle{
+    display:flex; background:rgba(255,255,255,0.04); border-radius:10px; padding:4px; margin-bottom:28px;
+    border:1px solid var(--border);
+  }
+  .toggle button{
+    flex:1; padding:10px; border:none; background:transparent; color:var(--muted);
+    font-family:'Inter',sans-serif; font-weight:600; font-size:13px; border-radius:8px;
+    cursor:pointer; transition:all .2s ease;
+  }
+  .toggle button.active{
+    background:rgba(220,38,38,0.18);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    border:1px solid rgba(248,113,113,0.4);
+    color:#fff;
+  }
+  h1{ font-family:'Fraunces',serif; font-weight:600; font-size:25px; margin:0 0 6px; letter-spacing:-0.01em; }
+  .sub{ color:var(--muted); font-size:13px; margin:0 0 24px; }
+  label{ display:block; font-size:12px; color:var(--muted); margin:14px 0 6px; font-weight:500; }
+  input{
+    width:100%; padding:12px 14px; background:rgba(255,255,255,0.04);
+    border:1px solid var(--border); border-radius:10px; color:var(--text);
+    font-family:'Inter',sans-serif; font-size:14px; outline:none; transition:border-color .15s;
+  }
+  input:focus{ border-color:var(--blue); }
+  .field-hidden{ display:none; }
+  .submit{
+    width:100%; margin-top:24px; padding:13px;
+    background:rgba(220,38,38,0.16);
+    backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    border:1px solid rgba(248,113,113,0.45);
+    box-shadow:0 8px 24px rgba(220,38,38,0.15), inset 0 1px 0 rgba(255,255,255,0.1);
+    color:#fff; border-radius:10px;
+    font-family:'Inter',sans-serif; font-weight:700; font-size:14px; cursor:pointer;
+    transition:all .2s ease;
+  }
+  .submit:hover{
+    background:rgba(220,38,38,0.24);
+    border-color:rgba(248,113,113,0.65);
+    transform:translateY(-1px);
+  }
+  .foot{ text-align:center; color:var(--muted); font-size:12px; margin-top:18px; }
+  .foot a{ color:var(--blue); text-decoration:none; }
+</style>
+</head>
+<body>
+
+  <div class="loader">
+    <div class="loader-wordmark">GRAYLORE</div>
+    <svg class="ticket-svg" viewBox="0 0 150 100">
+      <defs><linearGradient id="loaderGrad" x1="0" y1="0" x2="150" y2="0"><stop offset="0" stop-color="#DC2626"/><stop offset="1" stop-color="#F87171"/></linearGradient></defs>
+      <g class="ticket-half-left">
+        <path class="ticket-path" d="M10,20 h130 a6,6 0 0 1 6,6 a10,10 0 0 0 0,20 a6,6 0 0 1 -6,6 v0"/>
+      </g>
+      <g class="ticket-half-right">
+        <path class="ticket-path" d="M140,52 v22 a6,6 0 0 1 -6,6 h-130 a6,6 0 0 1 -6,-6 a10,10 0 0 0 0,-20 a6,6 0 0 1 6,-6" style="animation-delay:0.15s;"/>
+      </g>
+      <line x1="75" y1="20" x2="75" y2="80" stroke="#F87171" stroke-width="1.5" stroke-dasharray="4,4" opacity="0.6"/>
+    </svg>
+  </div>
+
+  <div class="page">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <div class="brand">
+    <svg viewBox="0 0 40 26" fill="none">
+      <path d="M2,4 h36 a2,2 0 0 1 2,2 a4,4 0 0 0 0,8 a2,2 0 0 1 -2,2 h-36 a2,2 0 0 1 -2,-2 a4,4 0 0 0 0,-8 a2,2 0 0 1 2,-2 z" stroke="url(#g1)" stroke-width="1.6"/>
+      <line x1="20" y1="4" x2="20" y2="22" stroke="url(#g1)" stroke-width="1" stroke-dasharray="2,2" opacity="0.6"/>
+      <defs><linearGradient id="g1" x1="0" y1="0" x2="40" y2="0"><stop offset="0" stop-color="#DC2626"/><stop offset="1" stop-color="#F87171"/></linearGradient></defs>
+    </svg>
+    Gray<span class="grad-text">lore</span>
+  </div>
+
+  <div class="card">
+    <div class="toggle">
+      <button class="active" id="btn-login" onclick="setMode('login')">Sign In</button>
+      <button id="btn-register" onclick="setMode('register')">Register</button>
+    </div>
+
+    <h1 id="title">Welcome back</h1>
+    <p class="sub" id="subtitle">Sign in to keep watching.</p>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <p style="color:#F87171; font-size:12px; margin:0 0 10px;">{{ messages[0] }}</p>
+      {% endif %}
+    {% endwith %}
+    <form id="auth-form" method="POST" action="/login">
+      <div id="name-field" class="field-hidden">
+        <label>Full name</label>
+        <input type="text" name="name" placeholder="e.g. Aditi Menon">
+      </div>
+      <label>Email</label>
+      <input type="email" name="email" placeholder="you@example.com" required>
+      <label>Password</label>
+      <input type="password" name="password" placeholder="••••••••" required>
+      <button type="submit" class="submit" id="submit-btn">Sign In</button>
+    </form>
+
+    <p class="foot">Demo accounts: aditi@example.com · rohan@example.com · admin@graylore.com (password: password123)</p>
+  </div>
+  </div>
+
+<script>
+function setMode(mode){
+  const isLogin = mode === 'login';
+  document.getElementById('btn-login').classList.toggle('active', isLogin);
+  document.getElementById('btn-register').classList.toggle('active', !isLogin);
+  document.getElementById('title').textContent = isLogin ? 'Welcome back' : 'Create your account';
+  document.getElementById('subtitle').textContent = isLogin ? 'Sign in to keep watching.' : 'Start streaming in under a minute.';
+  document.getElementById('name-field').classList.toggle('field-hidden', isLogin);
+  document.getElementById('submit-btn').textContent = isLogin ? 'Sign In' : 'Create Account';
+  document.getElementById('auth-form').action = isLogin ? '/login' : '/register';
+  document.querySelector('input[name="name"]').required = !isLogin;
+}
+</script>
+</body>
+</html>

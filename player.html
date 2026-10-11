@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Graylore — Now Playing</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500;600&display=swap');
+  :root{
+    --bg:#0A0E1A; --blue:#DC2626; --violet:#F87171; --text:#F5F7FA; --muted:#9AA3B2;
+    --border:rgba(255,255,255,0.14);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:#000; color:var(--text); font-family:'Inter',sans-serif;
+    height:100vh; display:flex; flex-direction:column; position:relative; overflow:hidden;
+  }
+  .blob{ position:fixed; border-radius:50%; filter:blur(130px); opacity:0.18; z-index:0; pointer-events:none; }
+  .blob-1{ width:600px; height:600px; background:var(--blue); top:-260px; left:-160px; }
+  .blob-2{ width:520px; height:520px; background:var(--violet); bottom:-220px; right:-160px; }
+
+  .top-bar{
+    display:flex; align-items:center; gap:14px; padding:18px 26px;
+    background:linear-gradient(180deg, rgba(10,14,26,0.85), transparent);
+    position:absolute; top:0; left:0; right:0; z-index:3;
+    transition:opacity .3s ease;
+  }
+  .back{
+    cursor:pointer; font-size:18px; color:var(--text);
+    background:rgba(255,255,255,0.06); border:1px solid var(--border);
+    width:34px; height:34px; border-radius:10px;
+  }
+  .now-title{ font-family:'Fraunces',serif; font-size:16px; font-weight:600; }
+  .now-meta{ font-size:11px; color:var(--muted); }
+
+  .stage{ flex:1; position:relative; z-index:1; background:#000; display:flex; align-items:center; justify-content:center; }
+  video, .yt-frame{ width:100%; height:100%; object-fit:contain; background:#000; border:0; }
+  .play-icon{
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:78px; height:78px; border-radius:50%;
+    background:rgba(220,38,38,0.18); backdrop-filter:blur(14px);
+    border:1px solid rgba(248,113,113,0.4);
+    box-shadow:0 8px 30px rgba(220,38,38,0.2);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:26px; color:var(--text);
+    transition:all .2s ease; z-index:2;
+  }
+  .play-icon:hover{ transform:translate(-50%,-50%) scale(1.05); background:rgba(220,38,38,0.26); }
+  .resume-chip{
+    position:absolute; bottom:110px; left:50%; transform:translateX(-50%);
+    background:rgba(20,25,40,0.6); backdrop-filter:blur(16px);
+    border:1px solid var(--border); z-index:2;
+    padding:11px 20px; border-radius:30px; font-size:12px; display:flex; align-items:center; gap:10px;
+    white-space:nowrap;
+  }
+  .resume-chip b{ color:var(--blue); }
+  .no-stream{ text-align:center; color:var(--muted); font-size:14px; max-width:420px; line-height:1.6; }
+
+  .controls{
+    position:absolute; left:0; right:0; bottom:0; z-index:3; padding:18px 26px 26px;
+    background:linear-gradient(0deg, rgba(0,0,0,0.85), transparent);
+    transition:opacity .3s ease;
+  }
+  body.idle .controls, body.idle .top-bar{ opacity:0; }
+  .progress-track{
+    width:100%; height:5px; background:rgba(255,255,255,0.15); border-radius:4px;
+    margin-bottom:14px; cursor:pointer; position:relative;
+  }
+  .progress-fill{
+    width:0%; height:100%; border-radius:4px; position:relative;
+    background:linear-gradient(90deg, var(--blue), var(--violet));
+  }
+  .progress-fill::after{ content:""; position:absolute; right:-5px; top:-4px; width:13px; height:13px; border-radius:50%; background:var(--violet); box-shadow:0 0 10px rgba(248,113,113,0.7); }
+  .time-row{ display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:-8px; margin-bottom:14px; }
+  .ctrl-row{ display:flex; align-items:center; gap:20px; }
+  .ctrl-row button{ background:none; border:none; color:var(--text); font-size:19px; cursor:pointer; }
+  .log-note{ margin-left:auto; font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+  .log-note .dot{ width:7px; height:7px; border-radius:50%; background:var(--blue); animation:pulse 1.6s infinite; }
+  .log-note.saved .dot{ background:#22c55e; animation:none; }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+</style>
+</head>
+<body>
+
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <div class="top-bar">
+    <button class="back" onclick="leave()">←</button>
+    <div>
+      <div class="now-title">{{ content.title }}</div>
+      <div class="now-meta">{{ content.genre }} · {{ content.duration_min }} min · {{ content.age_rating }}</div>
+    </div>
+  </div>
+
+  <div class="stage" id="stage">
+    {% if content.video_url %}
+      <video id="video" src="{{ content.video_url }}" preload="metadata"
+             {% if content.backdrop_url %}poster="{{ content.backdrop_url }}"{% endif %}
+             playsinline></video>
+      {% if resume_sec > 30 %}
+      <div class="resume-chip" id="resume-chip">
+        Resuming from <b id="resume-label"></b>{% if last_watched %} — last watched {{ last_watched.strftime('%d %b') }}{% endif %}
+      </div>
+      {% endif %}
+      <div class="play-icon" id="big-play" onclick="togglePlay()">▶</div>
+    {% elif content.trailer_key %}
+      <iframe class="yt-frame" src="https://www.youtube.com/embed/{{ content.trailer_key }}?autoplay=1&rel=0"
+              allow="autoplay; fullscreen" allowfullscreen></iframe>
+    {% else %}
+      <div class="no-stream">
+        No stream is attached to this title yet.<br>
+        Set a <code>video_url</code> on it from the admin panel to enable playback.
+      </div>
+    {% endif %}
+  </div>
+
+  {% if content.video_url %}
+  <div class="controls">
+    <div class="progress-track" id="track"><div class="progress-fill" id="fill"></div></div>
+    <div class="time-row"><span id="t-cur">0:00</span><span id="t-dur">0:00</span></div>
+    <div class="ctrl-row">
+      <button onclick="seekBy(-10)" title="Back 10s">⏮</button>
+      <button id="play-btn" onclick="togglePlay()">▶</button>
+      <button onclick="seekBy(10)" title="Forward 10s">⏭</button>
+      <button id="mute-btn" onclick="toggleMute()">🔊</button>
+      <button onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
+      <div class="log-note" id="log-note"><span class="dot"></span> <span id="log-text">Watch history logging</span></div>
+    </div>
+  </div>
+
+<script>
+const WATCH_ID   = {{ watch_id }};
+const RESUME_SEC = {{ resume_sec }};
+const SAVE_EVERY = 10;      // seconds between /progress calls while playing
+
+const v       = document.getElementById('video');
+const fill    = document.getElementById('fill');
+const tCur    = document.getElementById('t-cur');
+const tDur    = document.getElementById('t-dur');
+const playBtn = document.getElementById('play-btn');
+const bigPlay = document.getElementById('big-play');
+const chip    = document.getElementById('resume-chip');
+const logNote = document.getElementById('log-note');
+const logText = document.getElementById('log-text');
+
+let watchedSec = 0;         // seconds actually played this session
+let lastTick   = null;
+let lastSaved  = 0;
+
+function fmt(s){
+  s = Math.floor(s || 0);
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  return (h ? h + ':' + String(m).padStart(2,'0') : m) + ':' + String(sec).padStart(2,'0');
+}
+
+v.addEventListener('loadedmetadata', () => {
+  tDur.textContent = fmt(v.duration);
+  if (RESUME_SEC > 0 && RESUME_SEC < v.duration - 5) {
+    v.currentTime = RESUME_SEC;
+    if (chip) document.getElementById('resume-label').textContent = fmt(RESUME_SEC);
+  } else if (chip) {
+    chip.remove();
+  }
+});
+
+v.addEventListener('timeupdate', () => {
+  if (v.duration) fill.style.width = (v.currentTime / v.duration * 100) + '%';
+  tCur.textContent = fmt(v.currentTime);
+  const now = v.currentTime;
+  if (lastTick !== null && now > lastTick && now - lastTick < 2) watchedSec += now - lastTick;
+  lastTick = now;
+  if (now - lastSaved >= SAVE_EVERY) save();
+});
+
+v.addEventListener('play',  () => { setPlaying(true);  if (chip) chip.remove(); });
+v.addEventListener('pause', () => { setPlaying(false); save(); });
+v.addEventListener('ended', () => { setPlaying(false); save(true); });
+v.addEventListener('seeking', () => { lastTick = null; });
+
+function setPlaying(p){
+  playBtn.textContent = p ? '❚❚' : '▶';
+  bigPlay.style.display = p ? 'none' : 'flex';
+}
+function togglePlay(){ v.paused ? v.play() : v.pause(); }
+function seekBy(d){ v.currentTime = Math.max(0, Math.min(v.duration || 0, v.currentTime + d)); }
+function toggleMute(){ v.muted = !v.muted; document.getElementById('mute-btn').textContent = v.muted ? '🔇' : '🔊'; }
+function toggleFullscreen(){
+  const el = document.documentElement;
+  document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen && el.requestFullscreen();
+}
+document.getElementById('track').addEventListener('click', e => {
+  const r = e.currentTarget.getBoundingClientRect();
+  v.currentTime = (e.clientX - r.left) / r.width * v.duration;
+});
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'ArrowLeft')  seekBy(-10);
+  if (e.code === 'ArrowRight') seekBy(10);
+  if (e.key === 'f') toggleFullscreen();
+  if (e.key === 'm') toggleMute();
+});
+
+// Persist progress to WatchHistory. `beacon` is used when the page is closing.
+function save(beacon=false){
+  lastSaved = v.currentTime;
+  const payload = JSON.stringify({
+    watch_id: WATCH_ID,
+    position_sec: Math.floor(v.ended ? 0 : v.currentTime),   // finished → next play starts over
+    watched_sec: Math.floor(watchedSec)
+  });
+  if (beacon && navigator.sendBeacon) {
+    navigator.sendBeacon('/progress', new Blob([payload], {type:'application/json'}));
+    return;
+  }
+  fetch('/progress', {method:'POST', headers:{'Content-Type':'application/json'}, body:payload, keepalive:true})
+    .then(r => { if (r.ok) { logNote.classList.add('saved'); logText.textContent = 'Saved at ' + fmt(v.currentTime); } })
+    .catch(() => {});
+}
+window.addEventListener('pagehide', () => save(true));
+function leave(){ save(true); window.location.href = '/home'; }
+
+// Hide chrome while playing and the mouse is still
+let idleTimer;
+function wake(){
+  document.body.classList.remove('idle');
+  clearTimeout(idleTimer);
+  if (!v.paused) idleTimer = setTimeout(() => document.body.classList.add('idle'), 2800);
+}
+['mousemove','click','keydown','touchstart'].forEach(ev => document.addEventListener(ev, wake));
+v.addEventListener('play', wake);
+v.addEventListener('pause', () => document.body.classList.remove('idle'));
+document.getElementById('stage').addEventListener('click', e => { if (e.target === v) togglePlay(); });
+</script>
+  {% endif %}
+</body>
+</html>

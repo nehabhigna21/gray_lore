@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Graylore — My Space</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#0A0E1A;
+    --glass:rgba(255,255,255,0.06);
+    --glass-2:rgba(255,255,255,0.1);
+    --border:rgba(255,255,255,0.12);
+    --blue:#DC2626;
+    --violet:#F87171;
+    --text:#F5F7FA;
+    --muted:#9AA3B2;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); font-family:'Inter',sans-serif; color:var(--text);
+    padding-bottom:60px; position:relative; overflow-x:hidden;
+  }
+  .blob{ position:fixed; border-radius:50%; filter:blur(120px); z-index:0; opacity:0.25; pointer-events:none; }
+  .blob-1{ width:600px; height:600px; background:var(--blue); top:-260px; left:-200px; }
+  .blob-2{ width:520px; height:520px; background:var(--violet); top:400px; right:-220px; }
+
+  /* Loader */
+  .loader{
+    position:fixed; inset:0; z-index:200; background:var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    animation:loaderFade 0.5s ease 1.5s forwards;
+  }
+  @keyframes loaderFade{ to{ opacity:0; visibility:hidden; } }
+  .ticket-svg{ width:130px; height:86px; }
+  .ticket-path{
+    fill:none; stroke:url(#loaderGrad); stroke-width:2.5;
+    stroke-dasharray:520; stroke-dashoffset:520; animation:draw 0.9s ease forwards;
+  }
+  @keyframes draw{ to{ stroke-dashoffset:0; } }
+  .ticket-half-left{ animation:tearLeft 0.4s ease 1s forwards; }
+  .ticket-half-right{ animation:tearRight 0.4s ease 1.05s forwards; }
+  @keyframes tearLeft{ to{ transform:translate(-14px,-6px) rotate(-6deg); opacity:0; } }
+  @keyframes tearRight{ to{ transform:translate(14px,6px) rotate(6deg); opacity:0; } }
+  .page{ opacity:0; animation:pageIn 0.5s ease 1.7s forwards; }
+  @keyframes pageIn{ to{ opacity:1; } }
+
+  header{
+    display:flex; align-items:center; justify-content:space-between; padding:18px 48px;
+    position:sticky; top:0; z-index:20;
+    background:rgba(10,14,26,0.55);
+    backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+    border-bottom:1px solid var(--border);
+  }
+  .brand{ display:flex; align-items:center; gap:8px; font-family:'Fraunces',serif; font-weight:600; font-size:20px; }
+  .brand svg{ width:24px; height:16px; }
+  .grad-text{ background:linear-gradient(90deg, var(--blue), var(--violet)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .nav-right{ display:flex; align-items:center; gap:22px; }
+  /* Netflix-style expanding search box */
+  .search{ display:flex; align-items:center; height:34px; border:1px solid transparent; border-radius:4px; transition:all .25s ease; }
+  .search.open{ background:rgba(0,0,0,0.75); border-color:rgba(255,255,255,0.85); padding-right:6px; }
+  .search-btn{ background:none; border:none; color:var(--text); cursor:pointer; padding:0 8px; display:flex; align-items:center; }
+  .search-btn svg{ width:20px; height:20px; }
+  .search input{ width:0; opacity:0; background:transparent; border:none; outline:none; color:var(--text); font-family:'Inter',sans-serif; font-size:14px; transition:width .25s ease, opacity .2s; }
+  .search.open input{ width:230px; opacity:1; }
+  .search input::placeholder{ color:var(--muted); }
+  .search-clear{ background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; padding:0 4px; display:none; }
+  .search.open.has-text .search-clear{ display:block; }
+  #search-results .grid, .grid.wrap{ flex-wrap:wrap; overflow:visible; }
+  .results-head{ font-size:14px; color:var(--muted); margin-bottom:16px; }
+  .results-head b{ color:var(--text); font-weight:600; }
+  .hidden{ display:none !important; }
+  .nav-link{ color:var(--muted); font-size:14px; cursor:pointer; transition:color .15s; }
+  .nav-link:hover{ color:var(--text); }
+  .avatar{
+    width:34px; height:34px; border-radius:10px;
+    background:rgba(220,38,38,0.22);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    border:1px solid rgba(248,113,113,0.4);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces',serif; font-weight:600; cursor:pointer;
+  }
+
+  main{ position:relative; z-index:1; padding:0 48px; }
+  section{ margin-top:40px; }
+  .row-title{
+    font-family:'Fraunces',serif; font-size:19px; font-weight:600; margin-bottom:16px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .row-title .tag{
+    font-family:'Inter',sans-serif; font-size:10px;
+    background:var(--glass); border:1px solid var(--border);
+    color:var(--blue); padding:3px 9px; border-radius:20px; font-weight:700; letter-spacing:0.05em;
+  }
+
+  .grid{ display:flex; gap:16px; overflow-x:auto; padding-bottom:10px; }
+  .card{ flex:0 0 auto; width:160px; cursor:pointer; transition:transform .2s ease; }
+  .card:hover{ transform:translateY(-6px); }
+  .poster{
+    width:160px; height:220px; border-radius:14px; display:flex; align-items:flex-end;
+    padding:12px; font-size:12px; color:rgba(255,255,255,0.92); font-weight:600;
+    position:relative; overflow:hidden;
+    border:1px solid var(--border);
+  }
+  .poster::after{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, transparent 35%, rgba(0,0,0,0.7)); }
+  .poster-label{ position:relative; z-index:1; }
+  .poster.has-img{ background-size:cover; background-position:center; }
+  .poster.has-img .poster-label{ display:none; }
+  .poster.has-img::after{ background:linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.6)); }
+  .cw-bar{ position:absolute; left:0; right:0; bottom:0; height:4px; background:rgba(255,255,255,0.18); z-index:2; }
+  .cw-bar span{ display:block; height:100%; background:linear-gradient(90deg, var(--blue), var(--violet)); }
+  .card-title{ font-size:13px; margin-top:9px; font-weight:600; }
+  .card-meta{ font-size:11px; color:var(--muted); margin-top:2px; }
+  .badge-region{
+    position:absolute; top:9px; right:9px; z-index:2;
+    background:rgba(10,14,26,0.55); backdrop-filter:blur(8px);
+    color:var(--blue); font-size:9px; padding:3px 7px; border-radius:6px; font-weight:700;
+    border:1px solid rgba(255,255,255,0.15);
+  }
+
+  /* Modals */
+  .modal-backdrop{
+    display:none; position:fixed; inset:0; background:rgba(5,7,14,0.6); z-index:50;
+    align-items:center; justify-content:center; padding:20px;
+    backdrop-filter:blur(4px);
+  }
+  .modal-backdrop.open{ display:flex; }
+  .modal{
+    background:rgba(20,25,40,0.75);
+    backdrop-filter:blur(30px); -webkit-backdrop-filter:blur(30px);
+    border:1px solid var(--border); border-radius:20px; max-width:520px; width:100%;
+    overflow:hidden; box-shadow:0 40px 100px rgba(0,0,0,0.6);
+  }
+  .modal-hero{ height:190px; display:flex; align-items:flex-end; padding:22px; position:relative; background-size:cover; background-position:center; }
+  .modal-hero::after{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, transparent, rgba(20,25,40,0.95)); }
+  .modal-hero h2{ font-family:'Fraunces',serif; font-size:25px; margin:0; position:relative; z-index:1; font-weight:600; }
+  .modal-body{ padding:20px 26px 26px; }
+  .modal-meta{ display:flex; gap:14px; font-size:12px; color:var(--muted); margin-bottom:14px; }
+  .modal-desc{ font-size:13px; line-height:1.65; color:var(--text); opacity:0.85; }
+  .modal-actions{ display:flex; gap:10px; margin-top:20px; }
+  .btn{
+    padding:11px 20px; border-radius:10px;
+    font-family:'Inter',sans-serif; font-weight:700; font-size:13px; cursor:pointer;
+    transition:all .2s ease;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  }
+  .btn-primary{
+    background:rgba(220,38,38,0.18);
+    border:1px solid rgba(248,113,113,0.45);
+    box-shadow:0 8px 24px rgba(220,38,38,0.15), inset 0 1px 0 rgba(255,255,255,0.08);
+    color:#fff;
+  }
+  .btn-primary:hover{ background:rgba(220,38,38,0.28); border-color:rgba(248,113,113,0.65); transform:translateY(-1px); }
+  .btn-secondary{ background:rgba(255,255,255,0.05); color:var(--text); border:1px solid var(--border); }
+  .btn-secondary:hover{ background:rgba(255,255,255,0.09); }
+  .review-box{ margin-top:22px; border-top:1px solid var(--border); padding-top:18px; }
+  .review-box label{ font-size:12px; color:var(--muted); display:block; margin-bottom:6px; }
+  .review-box textarea{
+    width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:10px;
+    color:var(--text); padding:10px; font-family:'Inter',sans-serif; font-size:13px; resize:vertical; min-height:60px;
+  }
+  .stars{ color:var(--blue); font-size:17px; margin-bottom:10px; letter-spacing:2px; cursor:pointer; }
+  .close-x{
+    position:absolute; top:14px; right:14px; z-index:2;
+    background:rgba(0,0,0,0.4); backdrop-filter:blur(6px);
+    border:1px solid var(--border); color:var(--text);
+    width:28px; height:28px; border-radius:50%; cursor:pointer; font-size:14px;
+  }
+
+  .plan-list{ display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+  .plan{
+    display:flex; justify-content:space-between; align-items:center; padding:15px 17px; border-radius:12px;
+    background:rgba(255,255,255,0.04); border:1px solid var(--border); cursor:pointer; transition:border-color .15s;
+  }
+  .plan.selected{ border-color:rgba(248,113,113,0.5); background:rgba(220,38,38,0.1); backdrop-filter:blur(10px); }
+  .plan-name{ font-weight:700; font-size:14px; }
+  .plan-devices{ font-size:11px; color:var(--muted); }
+  .plan-price{ font-family:'Fraunces',serif; font-weight:600; }
+  .hero{ display:flex; align-items:center; gap:22px; margin-top:34px; }
+  .hero .big-avatar{ width:72px; height:72px; border-radius:18px; background:linear-gradient(135deg, var(--blue), var(--violet)); display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-size:34px; font-weight:700; box-shadow:0 10px 30px rgba(220,38,38,0.35); }
+  .hero h1{ font-family:'Fraunces',serif; font-size:30px; margin:0; font-weight:600; }
+  .hero .sub{ color:var(--muted); font-size:13px; margin-top:4px; }
+  .stat-chips{ display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; }
+  .chip{ font-size:11px; padding:5px 10px; border-radius:20px; border:1px solid var(--border); background:var(--glass); color:var(--muted); }
+  .chip b{ color:var(--text); }
+  .card .card-actions{ display:flex; gap:6px; margin-top:8px; }
+  .mini{ font-size:11px; padding:5px 9px; border-radius:7px; border:1px solid var(--border); background:rgba(255,255,255,0.05); color:var(--text); cursor:pointer; text-decoration:none; font-family:'Inter',sans-serif; }
+  .mini:hover{ background:rgba(255,255,255,0.1); }
+  .mini.primary{ background:rgba(220,38,38,0.2); border-color:rgba(248,113,113,0.45); }
+  .mini.danger:hover{ background:rgba(220,38,38,0.25); border-color:rgba(248,113,113,0.6); }
+  .poster.dim{ filter:grayscale(1) brightness(.6); }
+  .unavail{ position:absolute; top:8px; left:8px; z-index:2; font-size:9px; letter-spacing:1px; padding:3px 7px; border-radius:6px; background:rgba(0,0,0,0.7); color:var(--muted); }
+  .review-list{ display:flex; flex-direction:column; gap:12px; }
+  .review{ display:flex; gap:16px; padding:14px 16px; border:1px solid var(--border); border-radius:14px; background:var(--glass); backdrop-filter:blur(14px); }
+  .review .thumb{ width:56px; height:80px; border-radius:8px; flex:0 0 auto; background:#2c2c2f center/cover; }
+  .review .body{ flex:1; min-width:0; }
+  .review .title{ font-weight:600; font-size:14px; }
+  .review .meta{ font-size:11px; color:var(--muted); margin-top:2px; }
+  .review .stars-static{ color:var(--blue); letter-spacing:2px; font-size:15px; margin-top:6px; }
+  .review .stars-static span.off{ opacity:.25; }
+  .review p{ font-size:13px; margin:8px 0 0; line-height:1.55; opacity:.9; }
+  .review .actions{ display:flex; gap:6px; align-items:flex-start; }
+  .edit-form{ display:none; margin-top:12px; border-top:1px solid var(--border); padding-top:12px; }
+  .edit-form.open{ display:block; }
+  .edit-form textarea{ width:100%; box-sizing:border-box; min-height:64px; padding:10px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'Inter',sans-serif; font-size:13px; resize:vertical; }
+  .edit-form .stars{ margin:4px 0 8px; }
+  .history{ width:100%; border-collapse:collapse; font-size:13px; }
+  .history th{ text-align:left; font-size:10px; letter-spacing:1.2px; color:var(--muted); padding:8px 10px; border-bottom:1px solid var(--border); font-weight:600; }
+  .history td{ padding:10px; border-bottom:1px solid rgba(255,255,255,0.06); vertical-align:middle; }
+  .history .t-thumb{ width:34px; height:48px; border-radius:5px; background:#2c2c2f center/cover; display:inline-block; vertical-align:middle; margin-right:10px; }
+  .empty{ color:var(--muted); font-size:13px; padding:18px 0; }
+  .empty a{ color:var(--violet); }
+</style>
+</head>
+<body>
+
+  <div class="page" style="animation-delay:0s;">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <header>
+    <div class="brand" onclick="window.location.href='/home'" style="cursor:pointer;">
+      <svg viewBox="0 0 40 26" fill="none">
+        <path d="M2,4 h36 a2,2 0 0 1 2,2 a4,4 0 0 0 0,8 a2,2 0 0 1 -2,2 h-36 a2,2 0 0 1 -2,-2 a4,4 0 0 0 0,-8 a2,2 0 0 1 2,-2 z" stroke="url(#g1)" stroke-width="1.6"/>
+        <line x1="20" y1="4" x2="20" y2="22" stroke="url(#g1)" stroke-width="1" stroke-dasharray="2,2" opacity="0.6"/>
+        <defs><linearGradient id="g1" x1="0" y1="0" x2="40" y2="0"><stop offset="0" stop-color="#DC2626"/><stop offset="1" stop-color="#F87171"/></linearGradient></defs>
+      </svg>
+      Gray<span class="grad-text">lore</span>
+    </div>
+    <div class="nav-right">
+      <a class="nav-link" href="/home" style="text-decoration:none;">Home</a>
+      <div class="nav-link" style="color:var(--text);">My Space</div>
+      {% if is_admin %}<a class="nav-link" href="/admin" style="text-decoration:none;">Admin</a>{% endif %}
+      <a class="nav-link" href="/profiles" style="text-decoration:none;">Switch Profile</a>
+      <a class="nav-link" href="/logout" style="text-decoration:none;">Logout</a>
+      <div class="avatar" onclick="window.location.href='/home'">{{ (profile_name or 'G')[0] | upper }}</div>
+    </div>
+  </header>
+
+  <main>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+      <div style="margin:18px 0 0; padding:12px 16px; border-radius:12px; background:rgba(220,38,38,0.14); border:1px solid rgba(248,113,113,0.4); font-size:13px;">
+        {% for msg in messages %}<div>{{ msg }}</div>{% endfor %}
+      </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="hero">
+      <div class="big-avatar">{{ (profile_name or 'G')[0] | upper }}</div>
+      <div>
+        <h1>{{ profile_name }}'s Space{% if is_kids %} <span class="tag" style="vertical-align:middle;">KIDS</span>{% endif %}</h1>
+        <div class="sub">Your saved titles, your reviews and what you've been watching.</div>
+        <div class="stat-chips">
+          <span class="chip"><b>{{ watchlist|length }}</b> in My List</span>
+          <span class="chip"><b>{{ reviews|length }}</b> review{{ 's' if reviews|length != 1 }}</span>
+          <span class="chip"><b>{{ stats.titles }}</b> title{{ 's' if stats.titles != 1 }} watched</span>
+          <span class="chip"><b>{{ stats.minutes }}</b> minutes</span>
+        </div>
+      </div>
+    </div>
+
+    <section id="my-list">
+      <div class="row-title">My List <span class="tag">SAVED TO WATCH LATER</span></div>
+      <div class="grid wrap" id="list-grid">
+        {% for m in watchlist %}
+        <div class="card" id="list-{{ m.content_id }}" tabindex="0">
+          <div class="poster {% if m.poster_url %}has-img{% endif %} {% if not m.available %}dim{% endif %}" style="background-color:#2c2c2f;{% if m.poster_url %} background-image:url('{{ m.poster_url }}');{% endif %}">
+            {% if not m.available %}<span class="unavail">NOT IN {{ region }}</span>{% endif %}
+            <span class="poster-label">{{ m.title }}</span>
+          </div>
+          <div class="card-title">{{ m.title }}</div>
+          <div class="card-meta">{{ m.genre }} · {{ m.release_date.year if m.release_date else '' }} · {{ m.age_rating }}{% if m.avg_rating %} · ★ {{ m.avg_rating }}{% endif %}</div>
+          <div class="card-actions">
+            {% if m.available %}<a class="mini primary" href="/play/{{ m.content_id }}">▶ Play</a>{% endif %}
+            <button class="mini danger" onclick="removeFromList({{ m.content_id }})">Remove</button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <p class="empty {% if watchlist %}hidden{% endif %}" id="list-empty">Nothing saved yet. Open any title on <a href="/home">Home</a> and press <b>+ My List</b>.</p>
+    </section>
+
+    <section id="my-reviews">
+      <div class="row-title">My Reviews <span class="tag">{{ reviews|length }} RATED</span></div>
+      <div class="review-list">
+        {% for r in reviews %}
+        <div class="review" id="review-{{ r.content_id }}">
+          <div class="thumb" style="{% if r.poster_url %}background-image:url('{{ r.poster_url }}');{% endif %}"></div>
+          <div class="body">
+            <div class="title">{{ r.title }}</div>
+            <div class="meta">{{ r.genre }} · {{ r.release_date.year if r.release_date else '' }}</div>
+            <div class="stars-static">{% for i in range(1, 6) %}<span class="{{ 'off' if i > r.rating }}">★</span>{% endfor %} <span style="color:var(--muted); font-size:11px; letter-spacing:0;">{{ r.rating }}/5</span></div>
+            {% if r.review %}<p>{{ r.review }}</p>{% else %}<p style="color:var(--muted); font-style:italic;">No written review.</p>{% endif %}
+            <form class="edit-form" id="edit-{{ r.content_id }}" method="POST" action="/rate">
+              <input type="hidden" name="content_id" value="{{ r.content_id }}">
+              <input type="hidden" name="next" value="/me#review-{{ r.content_id }}">
+              <input type="hidden" name="rating" value="{{ r.rating }}" id="rating-{{ r.content_id }}">
+              <div class="stars" data-for="{{ r.content_id }}">{% for i in range(1, 6) %}<span data-v="{{ i }}" style="opacity:{{ '1' if i <= r.rating else '0.3' }}">★</span>{% endfor %}</div>
+              <textarea name="review" placeholder="Update your review...">{{ r.review or '' }}</textarea>
+              <div style="display:flex; gap:6px; margin-top:8px;">
+                <button type="submit" class="mini primary">Save</button>
+                <button type="button" class="mini" onclick="toggleEdit({{ r.content_id }})">Cancel</button>
+              </div>
+            </form>
+          </div>
+          <div class="actions">
+            <button class="mini" onclick="toggleEdit({{ r.content_id }})">Edit</button>
+            <form method="POST" action="/rate/delete" onsubmit="return confirm('Delete your review of {{ r.title | e }}?')">
+              <input type="hidden" name="content_id" value="{{ r.content_id }}">
+              <input type="hidden" name="next" value="/me#my-reviews">
+              <button type="submit" class="mini danger">Delete</button>
+            </form>
+          </div>
+        </div>
+        {% else %}
+        <p class="empty">You haven't rated anything yet. Rate a title from its popup on <a href="/home">Home</a>.</p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section id="history">
+      <div class="row-title">Recently Watched <span class="tag">LAST 20 SESSIONS</span></div>
+      {% if history %}
+      <table class="history">
+        <tr><th>TITLE</th><th>WHEN</th><th>WATCHED</th><th>STATUS</th><th></th></tr>
+        {% for h in history %}
+        <tr>
+          <td><span class="t-thumb" style="{% if h.poster_url %}background-image:url('{{ h.poster_url }}');{% endif %}"></span>{{ h.title }} <span style="color:var(--muted); font-size:11px;">· {{ h.genre }}</span></td>
+          <td style="color:var(--muted);">{{ h.watched_at.strftime('%d %b %Y, %H:%M') }}</td>
+          <td>{{ h.watch_minutes }} / {{ h.duration_min }} min</td>
+          <td>{% if h.position_sec %}<span class="pill-ish" style="color:var(--violet);">Stopped at {{ h.position_sec // 60 }}:{{ '%02d' % (h.position_sec % 60) }}</span>{% else %}<span style="color:#34D399;">Finished</span>{% endif %}</td>
+          <td style="text-align:right;"><a class="mini {% if h.position_sec %}primary{% endif %}" href="/play/{{ h.content_id }}">{% if h.position_sec %}▶ Resume{% else %}↻ Watch again{% endif %}</a></td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+      <p class="empty">No viewing history on this profile yet.</p>
+      {% endif %}
+    </section>
+  </main>
+  </div>
+
+<script>
+function removeFromList(id){
+  fetch('/watchlist/toggle', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({content_id: id})})
+    .then(r => r.json())
+    .then(d => {
+      if (!d.ok || d.in_list) return;          // in_list true would mean it was re-added; shouldn't happen from here
+      const card = document.getElementById('list-' + id);
+      if (card) card.remove();
+      if (!document.querySelectorAll('#list-grid .card').length) document.getElementById('list-empty').classList.remove('hidden');
+    }).catch(() => {});
+}
+function toggleEdit(id){ document.getElementById('edit-' + id).classList.toggle('open'); }
+document.querySelectorAll('.edit-form .stars').forEach(box => {
+  box.querySelectorAll('span').forEach(star => {
+    star.addEventListener('click', () => {
+      const v = +star.dataset.v;
+      document.getElementById('rating-' + box.dataset.for).value = v;
+      box.querySelectorAll('span').forEach(s => { s.style.opacity = +s.dataset.v <= v ? '1' : '0.3'; });
+    });
+  });
+});
+</script>
+</body>
+</html>

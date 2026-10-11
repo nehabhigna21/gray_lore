@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Graylore — Home</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#0A0E1A;
+    --glass:rgba(255,255,255,0.06);
+    --glass-2:rgba(255,255,255,0.1);
+    --border:rgba(255,255,255,0.12);
+    --blue:#DC2626;
+    --violet:#F87171;
+    --text:#F5F7FA;
+    --muted:#9AA3B2;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); font-family:'Inter',sans-serif; color:var(--text);
+    padding-bottom:60px; position:relative; overflow-x:hidden;
+  }
+  .blob{ position:fixed; border-radius:50%; filter:blur(120px); z-index:0; opacity:0.25; pointer-events:none; }
+  .blob-1{ width:600px; height:600px; background:var(--blue); top:-260px; left:-200px; }
+  .blob-2{ width:520px; height:520px; background:var(--violet); top:400px; right:-220px; }
+
+  /* Loader */
+  .loader{
+    position:fixed; inset:0; z-index:200; background:var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    animation:loaderFade 0.5s ease 1.5s forwards;
+  }
+  @keyframes loaderFade{ to{ opacity:0; visibility:hidden; } }
+  .ticket-svg{ width:130px; height:86px; }
+  .ticket-path{
+    fill:none; stroke:url(#loaderGrad); stroke-width:2.5;
+    stroke-dasharray:520; stroke-dashoffset:520; animation:draw 0.9s ease forwards;
+  }
+  @keyframes draw{ to{ stroke-dashoffset:0; } }
+  .ticket-half-left{ animation:tearLeft 0.4s ease 1s forwards; }
+  .ticket-half-right{ animation:tearRight 0.4s ease 1.05s forwards; }
+  @keyframes tearLeft{ to{ transform:translate(-14px,-6px) rotate(-6deg); opacity:0; } }
+  @keyframes tearRight{ to{ transform:translate(14px,6px) rotate(6deg); opacity:0; } }
+  .page{ opacity:0; animation:pageIn 0.5s ease 1.7s forwards; }
+  @keyframes pageIn{ to{ opacity:1; } }
+
+  header{
+    display:flex; align-items:center; justify-content:space-between; padding:18px 48px;
+    position:sticky; top:0; z-index:20;
+    background:rgba(10,14,26,0.55);
+    backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+    border-bottom:1px solid var(--border);
+  }
+  .brand{ display:flex; align-items:center; gap:8px; font-family:'Fraunces',serif; font-weight:600; font-size:20px; }
+  .brand svg{ width:24px; height:16px; }
+  .grad-text{ background:linear-gradient(90deg, var(--blue), var(--violet)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .nav-right{ display:flex; align-items:center; gap:22px; }
+  /* Netflix-style expanding search box */
+  .search{ display:flex; align-items:center; height:34px; border:1px solid transparent; border-radius:4px; transition:all .25s ease; }
+  .search.open{ background:rgba(0,0,0,0.75); border-color:rgba(255,255,255,0.85); padding-right:6px; }
+  .search-btn{ background:none; border:none; color:var(--text); cursor:pointer; padding:0 8px; display:flex; align-items:center; }
+  .search-btn svg{ width:20px; height:20px; }
+  .search input{ width:0; opacity:0; background:transparent; border:none; outline:none; color:var(--text); font-family:'Inter',sans-serif; font-size:14px; transition:width .25s ease, opacity .2s; }
+  .search.open input{ width:230px; opacity:1; }
+  .search input::placeholder{ color:var(--muted); }
+  .search-clear{ background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; padding:0 4px; display:none; }
+  .search.open.has-text .search-clear{ display:block; }
+  #search-results .grid, .grid.wrap{ flex-wrap:wrap; overflow:visible; }
+  .results-head{ font-size:14px; color:var(--muted); margin-bottom:16px; }
+  .results-head b{ color:var(--text); font-weight:600; }
+  .hidden{ display:none !important; }
+
+  /* ---- Lore, the hovering recommendation bot ---- */
+  .lore{ position:fixed; right:28px; bottom:26px; z-index:60; display:flex; flex-direction:column; align-items:flex-end; gap:12px; font-family:'Inter',sans-serif; }
+  .lore-bubble{
+    width:330px; max-width:calc(100vw - 56px); padding:16px 16px 14px; border-radius:18px 18px 4px 18px;
+    background:rgba(16,18,28,0.82); border:1px solid rgba(248,113,113,0.35); backdrop-filter:blur(18px);
+    box-shadow:0 18px 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset;
+    transform-origin:bottom right; animation:bubbleIn .35s cubic-bezier(.2,.9,.3,1.2);
+  }
+  @keyframes bubbleIn{ from{ opacity:0; transform:scale(.6) translateY(16px); } to{ opacity:1; transform:none; } }
+  .lore.min .lore-bubble{ display:none; }
+  .lore-name{ font-size:10px; letter-spacing:2px; color:var(--violet); font-weight:700; display:flex; justify-content:space-between; align-items:center; }
+  .lore-name button{ background:none; border:none; color:var(--muted); cursor:pointer; font-size:14px; line-height:1; padding:0 2px; }
+  .lore-text{ font-size:13.5px; line-height:1.6; margin-top:8px; min-height:22px; color:var(--text); }
+  .lore-text b{ color:#fff; }
+  .lore-text .cursor{ display:inline-block; width:7px; height:14px; background:var(--violet); vertical-align:-2px; margin-left:2px; animation:blinkCur .8s steps(1) infinite; }
+  @keyframes blinkCur{ 50%{ opacity:0; } }
+  .lore-pick{ display:flex; gap:12px; margin-top:12px; align-items:flex-start; animation:bubbleIn .3s ease; }
+  .lore-pick .pp{ width:54px; height:78px; border-radius:8px; flex:0 0 auto; background:#2c2c2f center/cover; box-shadow:0 6px 18px rgba(0,0,0,.5); }
+  .lore-pick .pt{ font-family:'Fraunces',serif; font-size:16px; font-weight:600; line-height:1.2; }
+  .lore-pick .pm{ font-size:11px; color:var(--muted); margin-top:3px; }
+  .lore-pick .pitch{ font-size:12.5px; line-height:1.55; margin-top:6px; opacity:.92; font-style:italic; }
+  .lore-actions{ display:flex; gap:6px; margin-top:12px; flex-wrap:wrap; }
+  .lore-chip{ font-size:11.5px; padding:6px 10px; border-radius:20px; border:1px solid var(--border); background:rgba(255,255,255,0.05); color:var(--text); cursor:pointer; transition:all .15s; font-family:'Inter',sans-serif; }
+  .lore-chip:hover{ background:rgba(220,38,38,0.2); border-color:rgba(248,113,113,0.55); transform:translateY(-1px); }
+  .lore-chip.primary{ background:rgba(220,38,38,0.22); border-color:rgba(248,113,113,0.5); font-weight:600; }
+  .lore-chip.on{ border-color:rgba(248,113,113,0.6); color:var(--violet); }
+  /* the bot itself */
+  .lore-bot{ width:64px; height:64px; cursor:pointer; position:relative; animation:hover 3.2s ease-in-out infinite; filter:drop-shadow(0 14px 18px rgba(220,38,38,0.35)); }
+  .lore-bot:hover{ animation-play-state:paused; transform:translateY(-4px) rotate(-6deg); }
+  @keyframes hover{ 0%,100%{ transform:translateY(0) rotate(-2deg); } 50%{ transform:translateY(-9px) rotate(3deg); } }
+  .lore-bot .shadow{ position:absolute; left:14px; right:14px; bottom:-14px; height:8px; border-radius:50%; background:rgba(220,38,38,0.35); filter:blur(5px); animation:shadowPulse 3.2s ease-in-out infinite; }
+  @keyframes shadowPulse{ 0%,100%{ transform:scaleX(1); opacity:.6; } 50%{ transform:scaleX(.7); opacity:.3; } }
+  .lore-bot svg{ width:64px; height:64px; overflow:visible; }
+  .lore-bot .eye, .lore-bot .mouth{ transform-box:fill-box; transform-origin:center; }
+  .lore-bot .eye{ animation:blink 4.5s infinite; }
+  .lore-bot .eye.r{ animation-delay:.1s; }
+  @keyframes blink{ 0%,92%,100%{ transform:scaleY(1); } 95%{ transform:scaleY(.08); } }
+  .lore-bot .tip{ animation:glow 1.6s ease-in-out infinite; }
+  @keyframes glow{ 0%,100%{ opacity:.6; r:3; } 50%{ opacity:1; r:4.2; } }
+  .lore.talking .lore-bot .mouth{ animation:talk .35s ease-in-out infinite alternate; transform-origin:center; }
+  @keyframes talk{ from{ transform:scaleY(.4); } to{ transform:scaleY(1.3); } }
+  .lore.min .lore-bot::after{ content:"?"; position:absolute; top:-2px; right:-2px; width:18px; height:18px; border-radius:50%; background:var(--blue); color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; animation:bubbleIn .3s ease; }
+  @media (max-width:600px){ .lore{ right:14px; bottom:14px; } .lore-bubble{ width:calc(100vw - 28px); } }
+  .nav-link{ color:var(--muted); font-size:14px; cursor:pointer; transition:color .15s; }
+  .nav-link:hover{ color:var(--text); }
+  .avatar{
+    width:34px; height:34px; border-radius:10px;
+    background:rgba(220,38,38,0.22);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    border:1px solid rgba(248,113,113,0.4);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces',serif; font-weight:600; cursor:pointer;
+  }
+
+  main{ position:relative; z-index:1; padding:0 48px; }
+  section{ margin-top:40px; }
+  .row-title{
+    font-family:'Fraunces',serif; font-size:19px; font-weight:600; margin-bottom:16px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .row-title .tag{
+    font-family:'Inter',sans-serif; font-size:10px;
+    background:var(--glass); border:1px solid var(--border);
+    color:var(--blue); padding:3px 9px; border-radius:20px; font-weight:700; letter-spacing:0.05em;
+  }
+
+  .grid{ display:flex; gap:16px; overflow-x:auto; padding-bottom:10px; }
+  .card{ flex:0 0 auto; width:160px; cursor:pointer; transition:transform .2s ease; }
+  .card:hover{ transform:translateY(-6px); }
+  .poster{
+    width:160px; height:220px; border-radius:14px; display:flex; align-items:flex-end;
+    padding:12px; font-size:12px; color:rgba(255,255,255,0.92); font-weight:600;
+    position:relative; overflow:hidden;
+    border:1px solid var(--border);
+  }
+  .poster::after{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, transparent 35%, rgba(0,0,0,0.7)); }
+  .poster-label{ position:relative; z-index:1; }
+  .poster.has-img{ background-size:cover; background-position:center; }
+  .poster.has-img .poster-label{ display:none; }
+  .poster.has-img::after{ background:linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.6)); }
+  .cw-bar{ position:absolute; left:0; right:0; bottom:0; height:4px; background:rgba(255,255,255,0.18); z-index:2; }
+  .cw-bar span{ display:block; height:100%; background:linear-gradient(90deg, var(--blue), var(--violet)); }
+  .card-title{ font-size:13px; margin-top:9px; font-weight:600; }
+  .card-meta{ font-size:11px; color:var(--muted); margin-top:2px; }
+  .badge-region{
+    position:absolute; top:9px; right:9px; z-index:2;
+    background:rgba(10,14,26,0.55); backdrop-filter:blur(8px);
+    color:var(--blue); font-size:9px; padding:3px 7px; border-radius:6px; font-weight:700;
+    border:1px solid rgba(255,255,255,0.15);
+  }
+
+  /* Modals */
+  .modal-backdrop{
+    display:none; position:fixed; inset:0; background:rgba(5,7,14,0.6); z-index:50;
+    align-items:center; justify-content:center; padding:20px;
+    backdrop-filter:blur(4px);
+  }
+  .modal-backdrop.open{ display:flex; }
+  .modal{
+    background:rgba(20,25,40,0.75);
+    backdrop-filter:blur(30px); -webkit-backdrop-filter:blur(30px);
+    border:1px solid var(--border); border-radius:20px; max-width:520px; width:100%;
+    overflow:hidden; box-shadow:0 40px 100px rgba(0,0,0,0.6);
+  }
+  .modal-hero{ height:190px; display:flex; align-items:flex-end; padding:22px; position:relative; background-size:cover; background-position:center; }
+  .modal-hero::after{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, transparent, rgba(20,25,40,0.95)); }
+  .modal-hero h2{ font-family:'Fraunces',serif; font-size:25px; margin:0; position:relative; z-index:1; font-weight:600; }
+  .modal-body{ padding:20px 26px 26px; }
+  .modal-meta{ display:flex; gap:14px; font-size:12px; color:var(--muted); margin-bottom:14px; }
+  .modal-desc{ font-size:13px; line-height:1.65; color:var(--text); opacity:0.85; }
+  .modal-actions{ display:flex; gap:10px; margin-top:20px; }
+  .btn{
+    padding:11px 20px; border-radius:10px;
+    font-family:'Inter',sans-serif; font-weight:700; font-size:13px; cursor:pointer;
+    transition:all .2s ease;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  }
+  .btn-primary{
+    background:rgba(220,38,38,0.18);
+    border:1px solid rgba(248,113,113,0.45);
+    box-shadow:0 8px 24px rgba(220,38,38,0.15), inset 0 1px 0 rgba(255,255,255,0.08);
+    color:#fff;
+  }
+  .btn-primary:hover{ background:rgba(220,38,38,0.28); border-color:rgba(248,113,113,0.65); transform:translateY(-1px); }
+  .btn-secondary{ background:rgba(255,255,255,0.05); color:var(--text); border:1px solid var(--border); }
+  .btn-secondary:hover{ background:rgba(255,255,255,0.09); }
+  .review-box{ margin-top:22px; border-top:1px solid var(--border); padding-top:18px; }
+  .review-box label{ font-size:12px; color:var(--muted); display:block; margin-bottom:6px; }
+  .review-box textarea{
+    width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:10px;
+    color:var(--text); padding:10px; font-family:'Inter',sans-serif; font-size:13px; resize:vertical; min-height:60px;
+  }
+  .stars{ color:var(--blue); font-size:17px; margin-bottom:10px; letter-spacing:2px; cursor:pointer; }
+  .close-x{
+    position:absolute; top:14px; right:14px; z-index:2;
+    background:rgba(0,0,0,0.4); backdrop-filter:blur(6px);
+    border:1px solid var(--border); color:var(--text);
+    width:28px; height:28px; border-radius:50%; cursor:pointer; font-size:14px;
+  }
+
+  .plan-list{ display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+  .plan{
+    display:flex; justify-content:space-between; align-items:center; padding:15px 17px; border-radius:12px;
+    background:rgba(255,255,255,0.04); border:1px solid var(--border); cursor:pointer; transition:border-color .15s;
+  }
+  .plan.selected{ border-color:rgba(248,113,113,0.5); background:rgba(220,38,38,0.1); backdrop-filter:blur(10px); }
+  .plan-name{ font-weight:700; font-size:14px; }
+  .plan-devices{ font-size:11px; color:var(--muted); }
+  .plan-price{ font-family:'Fraunces',serif; font-weight:600; }
+</style>
+</head>
+<body>
+
+  <div class="loader">
+    <svg class="ticket-svg" viewBox="0 0 150 100">
+      <defs><linearGradient id="loaderGrad" x1="0" y1="0" x2="150" y2="0"><stop offset="0" stop-color="#DC2626"/><stop offset="1" stop-color="#F87171"/></linearGradient></defs>
+      <g class="ticket-half-left">
+        <path class="ticket-path" d="M10,20 h130 a6,6 0 0 1 6,6 a10,10 0 0 0 0,20 a6,6 0 0 1 -6,6 v0"/>
+      </g>
+      <g class="ticket-half-right">
+        <path class="ticket-path" d="M140,52 v22 a6,6 0 0 1 -6,6 h-130 a6,6 0 0 1 -6,-6 a10,10 0 0 0 0,-20 a6,6 0 0 1 6,-6" style="animation-delay:0.1s;"/>
+      </g>
+      <line x1="75" y1="20" x2="75" y2="80" stroke="#F87171" stroke-width="1.5" stroke-dasharray="4,4" opacity="0.6"/>
+    </svg>
+  </div>
+
+  <div class="page">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 40 26" fill="none">
+        <path d="M2,4 h36 a2,2 0 0 1 2,2 a4,4 0 0 0 0,8 a2,2 0 0 1 -2,2 h-36 a2,2 0 0 1 -2,-2 a4,4 0 0 0 0,-8 a2,2 0 0 1 2,-2 z" stroke="url(#g1)" stroke-width="1.6"/>
+        <line x1="20" y1="4" x2="20" y2="22" stroke="url(#g1)" stroke-width="1" stroke-dasharray="2,2" opacity="0.6"/>
+        <defs><linearGradient id="g1" x1="0" y1="0" x2="40" y2="0"><stop offset="0" stop-color="#DC2626"/><stop offset="1" stop-color="#F87171"/></linearGradient></defs>
+      </svg>
+      Gray<span class="grad-text">lore</span>
+    </div>
+    <div class="nav-right">
+      <div class="search" id="search">
+        <button class="search-btn" type="button" onclick="openSearch()" title="Search (press /)" aria-label="Search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        </button>
+        <input id="search-input" type="text" placeholder="Titles, genres, years" autocomplete="off" spellcheck="false">
+        <button class="search-clear" type="button" onclick="clearSearch()" aria-label="Clear">✕</button>
+      </div>
+      <div class="nav-link" onclick="clearSearch()">Home</div>
+      {% if is_admin %}<a class="nav-link" href="/admin" style="text-decoration:none;">Admin</a>{% endif %}
+      <a class="nav-link" href="/me" style="text-decoration:none;">My Space</a>
+      <a class="nav-link" href="/profiles" style="text-decoration:none;">Switch Profile</a>
+      <a class="nav-link" href="/logout" style="text-decoration:none;">Logout</a>
+      <div class="nav-link" style="font-size:12px;">{{ profile_name }}{% if is_kids %} <span class="tag" style="margin-left:4px;">KIDS</span>{% endif %}</div>
+      <div class="avatar" onclick="openBilling()" title="Manage plan — currently {{ current_plan }}">{{ (profile_name or 'G')[0] | upper }}</div>
+    </div>
+  </header>
+
+  <main>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+      <div style="margin-bottom:18px; padding:12px 16px; border-radius:12px; background:rgba(220,38,38,0.14); border:1px solid rgba(248,113,113,0.4); font-size:13px;">
+        {% for msg in messages %}<div>{{ msg }}</div>{% endfor %}
+      </div>
+      {% endif %}
+    {% endwith %}
+
+    <section id="search-results" class="hidden">
+      <div class="results-head" id="results-head"></div>
+      <div class="grid" id="results-grid"></div>
+    </section>
+
+    <div id="rows">
+    <section>
+      <div class="row-title">Continue Watching</div>
+      <div class="grid" id="row-continue">
+        {% for m in continue_watching %}
+        <div class="card" tabindex="0" onclick='openContent({{ {"id": m.content_id, "title": m.title, "genre": m.genre, "year": m.release_date.year if m.release_date else "", "rating": m.age_rating or "", "overview": m.overview or "", "backdrop": m.backdrop_url or "", "poster": m.poster_url or "", "region": region, "avg": m.avg_rating|float if m.avg_rating else 0, "votes": m.rating_count or 0, "resume": m.position_sec or 0} | tojson }})'>
+          <div class="poster {% if m.poster_url %}has-img{% endif %}" style="background-color:#333336;{% if m.poster_url %} background-image:url('{{ m.poster_url }}');{% endif %}">
+            {% if m.position_sec and m.duration_min %}<div class="cw-bar"><span style="width:{{ (100 * m.position_sec / (m.duration_min * 60)) | round(0, 'floor') | int }}%"></span></div>{% endif %}
+            <span class="poster-label">{{ m.title }}</span>
+          </div>
+          <div class="card-title">{{ m.title }}</div>
+          <div class="card-meta">{{ m.genre }}{% if m.position_sec and m.duration_min %} · {{ (m.position_sec // 60) }} / {{ m.duration_min }} min{% endif %}</div>
+        </div>
+        {% else %}
+        <p style="color:var(--muted); font-size:13px;">Nothing in progress — play something and leave partway to see it here.</p>
+        {% endfor %}
+      </div>
+    </section>
+    <section>
+      <div class="row-title">Recommended for You <span class="tag">{% if recs_fallback %}TOP RATED · WATCH MORE TO PERSONALISE{% else %}VIEWERS LIKE YOU ALSO WATCHED{% endif %}</span></div>
+      <div class="grid" id="row-recs">
+        {% for m in recommendations %}
+        <div class="card" tabindex="0" onclick='openContent({{ {"id": m.content_id, "title": m.title, "genre": m.genre, "year": m.release_date.year if m.release_date else "", "rating": m.age_rating or "", "overview": m.overview or "", "backdrop": m.backdrop_url or "", "poster": m.poster_url or "", "region": region, "avg": m.avg_rating|float if m.avg_rating else 0, "votes": m.rating_count or 0} | tojson }})'>
+          <div class="poster {% if m.poster_url %}has-img{% endif %}" style="background-color:#2f2f32;{% if m.poster_url %} background-image:url('{{ m.poster_url }}');{% endif %}">
+            <span class="poster-label">{{ m.title }}</span>
+          </div>
+          <div class="card-title">{{ m.title }}</div>
+          <div class="card-meta">{{ m.genre }} · {% if recs_fallback %}{% if m.avg_rating %}★ {{ m.avg_rating }}{% else %}new{% endif %}{% else %}{{ m.shared_viewers }} similar viewer{{ 's' if m.shared_viewers != 1 }}{% endif %}</div>
+        </div>
+        {% else %}
+        <p style="color:var(--muted); font-size:13px;">You've watched everything available right now.</p>
+        {% endfor %}
+      </div>
+    </section>
+    <section>
+      <div class="row-title">Trending Now</div>
+      <div class="grid" id="row-trending">
+        {% for m in trending %}
+        <div class="card" tabindex="0" onclick='openContent({{ {"id": m.content_id, "title": m.title, "genre": m.genre, "year": m.release_date.year if m.release_date else "", "rating": m.age_rating or "", "overview": m.overview or "", "backdrop": m.backdrop_url or "", "poster": m.poster_url or "", "region": region, "avg": m.avg_rating|float if m.avg_rating else 0, "votes": m.rating_count or 0} | tojson }})'>
+          <div class="poster {% if m.poster_url %}has-img{% endif %}" style="background-color:#37373a;{% if m.poster_url %} background-image:url('{{ m.poster_url }}');{% endif %}">
+            <span class="poster-label">{{ m.title }}</span>
+          </div>
+          <div class="card-title">{{ m.title }}</div>
+          <div class="card-meta">{{ m.genre }} · {{ m.total_minutes }} min watched</div>
+        </div>
+        {% else %}
+        <p style="color:var(--muted); font-size:13px;">No viewing activity yet.</p>
+        {% endfor %}
+      </div>
+    </section>
+    {% for genre, items in genre_rows %}
+    <section>
+      <div class="row-title">{{ genre }}</div>
+      <div class="grid">
+        {% for m in items %}
+        <div class="card" tabindex="0" onclick='openContent({{ {"id": m.content_id, "title": m.title, "genre": m.genre, "year": m.release_date.year if m.release_date else "", "rating": m.age_rating or "", "overview": m.overview or "", "backdrop": m.backdrop_url or "", "poster": m.poster_url or "", "region": m.region, "avg": m.avg_rating|float if m.avg_rating else 0, "votes": m.rating_count or 0} | tojson }})'>
+          <div class="poster {% if m.poster_url %}has-img{% endif %}" style="background-color:#2c2c2f;{% if m.poster_url %} background-image:url('{{ m.poster_url }}');{% endif %}">
+            <span class="poster-label">{{ m.title }}</span>
+          </div>
+          <div class="card-title">{{ m.title }}</div>
+          <div class="card-meta">{{ m.release_date.year if m.release_date else '' }} · {{ m.age_rating }}{% if m.avg_rating %} · ★ {{ m.avg_rating }}{% endif %}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+    <section>
+      <div class="row-title">Full Catalog <span class="tag">{{ catalog|length }} TITLES LICENSED FOR {{ region }} · LIVE FROM POSTGRESQL</span></div>
+      <div class="grid wrap" id="row-catalog">
+        {% for m in catalog %}
+        <div class="card" tabindex="0" onclick='openContent({{ {"id": m.content_id, "title": m.title, "genre": m.genre, "year": m.release_date.year if m.release_date else "", "rating": m.age_rating or "", "overview": m.overview or "", "backdrop": m.backdrop_url or "", "poster": m.poster_url or "", "region": m.region, "avg": m.avg_rating|float if m.avg_rating else 0, "votes": m.rating_count or 0} | tojson }})'>
+          <div class="poster {% if m.poster_url %}has-img{% endif %}" style="background-color:#2c2c2f;{% if m.poster_url %} background-image:url('{{ m.poster_url }}');{% endif %}">
+            <span class="badge-region">{{ m.region }}</span>
+            <span class="poster-label">{{ m.title }}</span>
+          </div>
+          <div class="card-title">{{ m.title }}</div>
+          <div class="card-meta">{{ m.genre }} · {{ m.duration_min }} min · {{ m.age_rating }}{% if m.avg_rating %} · ★ {{ m.avg_rating }}{% endif %}</div>
+        </div>
+        {% else %}
+        <p style="color:var(--muted); font-size:13px;">No titles are licensed for {{ region }}{% if is_kids %} with a U rating{% endif %} right now.</p>
+        {% endfor %}
+      </div>
+    </section>
+    </div>
+  </main>
+  </div>
+
+  <div class="modal-backdrop" id="content-modal">
+    <div class="modal">
+      <div class="modal-hero" id="modal-hero" style="background:linear-gradient(135deg,#1b2740,#2a2440);">
+        <button class="close-x" onclick="closeModal('content-modal')">✕</button>
+        <h2 id="modal-title">Title</h2>
+      </div>
+      <div class="modal-body">
+        <div class="modal-meta">
+          <span id="modal-genre">Genre</span> · <span id="modal-year">Year</span> · <span id="modal-rating">Rating</span>
+        </div>
+        <p class="modal-desc" id="modal-desc">Description goes here.</p>
+        <div class="modal-actions">
+          <button class="btn btn-primary" id="modal-play-btn">▶ Play</button>
+          <button class="btn btn-secondary" id="modal-list-btn" onclick="toggleList()">+ My List</button>
+        </div>
+        <form class="review-box" id="rate-form" method="POST" action="/rate">
+          <input type="hidden" name="content_id" id="rate-content-id">
+          <label>Rate this title</label>
+          <div class="stars" id="star-input" data-value="5">
+            <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+          </div>
+          <input type="hidden" name="rating" id="rating-value" value="5">
+          <label>Write a review</label>
+          <textarea name="review" placeholder="Share your thoughts..."></textarea>
+          <button type="submit" class="btn btn-secondary" style="margin-top:10px;">Submit Rating</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lore, the recommendation bot -->
+  <div class="lore" id="lore">
+    <div class="lore-bubble" id="lore-bubble">
+      <div class="lore-name">LORE · YOUR FILM GUIDE <button type="button" onclick="loreMinimize()" title="Hide Lore">✕</button></div>
+      <div class="lore-text" id="lore-text"></div>
+      <div id="lore-pick"></div>
+      <div class="lore-actions" id="lore-actions"></div>
+    </div>
+    <div class="lore-bot" id="lore-bot" onclick="loreToggle()" title="Lore">
+      <svg viewBox="0 0 64 64" fill="none">
+        <defs>
+          <linearGradient id="loreBody" x1="0" y1="0" x2="64" y2="64"><stop offset="0" stop-color="#2a2f45"/><stop offset="1" stop-color="#141827"/></linearGradient>
+          <linearGradient id="loreGlow" x1="0" y1="0" x2="64" y2="0"><stop offset="0" stop-color="#DC2626"/><stop offset="1" stop-color="#F87171"/></linearGradient>
+        </defs>
+        <line x1="32" y1="12" x2="32" y2="4" stroke="url(#loreGlow)" stroke-width="2" stroke-linecap="round"/>
+        <circle class="tip" cx="32" cy="4" r="3.5" fill="#F87171"/>
+        <rect x="8" y="12" width="48" height="40" rx="18" fill="url(#loreBody)" stroke="url(#loreGlow)" stroke-width="1.6"/>
+        <rect x="15" y="20" width="34" height="22" rx="11" fill="#0A0E1A" opacity=".9"/>
+        <ellipse class="eye l" cx="25" cy="31" rx="4" ry="5" fill="#F87171"/>
+        <ellipse class="eye r" cx="39" cy="31" rx="4" ry="5" fill="#F87171"/>
+        <circle cx="26.5" cy="29.5" r="1.3" fill="#fff"/><circle cx="40.5" cy="29.5" r="1.3" fill="#fff"/>
+        <rect class="mouth" x="27" y="38" width="10" height="2.2" rx="1.1" fill="#F87171" opacity=".85"/>
+        <rect x="2" y="26" width="6" height="12" rx="3" fill="#1f2437" stroke="rgba(248,113,113,.5)"/>
+        <rect x="56" y="26" width="6" height="12" rx="3" fill="#1f2437" stroke="rgba(248,113,113,.5)"/>
+      </svg>
+      <div class="shadow"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="billing-modal">
+    <div class="modal">
+      <div class="modal-body" style="padding-top:26px; position:relative;">
+        <button class="close-x" style="position:absolute; top:14px; right:14px;" onclick="closeModal('billing-modal')">✕</button>
+        <h2 style="font-family:'Fraunces',serif; margin:0 0 4px; font-weight:600;">Manage Plan</h2>
+        <p style="color:var(--muted); font-size:13px; margin:0;">You're on <b style="color:var(--text);">{{ current_plan }}</b>. Choosing another plan cancels it and charges the new price today.</p>
+        <form method="POST" action="/billing">
+          <div class="plan-list">
+            {% for name, (price, devices) in plans.items() %}
+            <label class="plan {% if name == current_plan %}selected{% endif %}"><input type="radio" name="plan_type" value="{{ name }}" {% if name == current_plan %}checked{% endif %} style="margin-right:10px;"><div><div class="plan-name">{{ name }}</div><div class="plan-devices">{{ devices }} device{{ 's' if devices > 1 }}</div></div><div class="plan-price">₹{{ price }}</div></label>
+            {% endfor %}
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; margin-top:18px;">Save Changes</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<script>
+function openContent(t){
+  document.getElementById('modal-title').textContent = t.title;
+  document.getElementById('modal-genre').textContent = t.genre;
+  document.getElementById('modal-year').textContent = t.year || '';
+  document.getElementById('modal-rating').textContent = [
+    t.rating,
+    t.avg ? ('★ ' + t.avg + ' (' + t.votes + (t.votes === 1 ? ' rating' : ' ratings') + ')') : 'Not rated yet',
+    t.region ? ('Available: ' + t.region) : ''
+  ].filter(Boolean).join(' · ');
+  document.getElementById('modal-desc').textContent = t.overview || 'Streaming now on Graylore.';
+  const hero = document.getElementById('modal-hero');
+  const img = t.backdrop || t.poster;
+  hero.style.background = img ? `url('${img}') center/cover` : 'linear-gradient(135deg,#1b2740,#2a2440)';
+  document.getElementById('modal-play-btn').textContent = t.resume > 30 ? '▶ Resume' : '▶ Play';
+  document.getElementById('rate-content-id').value = t.id;
+  document.getElementById('modal-play-btn').onclick = () => { window.location.href = '/play/' + t.id; };
+  currentId = t.id;
+  paintListBtn();
+  document.getElementById('content-modal').classList.add('open');
+}
+
+// ---- Lore, the recommendation bot ----
+const LORE_MOODS = {{ moods | tojson }};
+const LORE_INTRO = {{ bot_intro | tojson }};
+const lore = document.getElementById('lore');
+const loreText = document.getElementById('lore-text');
+const lorePickEl = document.getElementById('lore-pick');
+const loreActions = document.getElementById('lore-actions');
+let loreMood = null, loreShown = [], loreTyping = null, loreCurrent = null;
+
+function loreMinimize(){ lore.classList.add('min'); try { localStorage.setItem('loreMin', '1'); } catch(e){} }
+function loreToggle(){
+  if (lore.classList.contains('min')) { lore.classList.remove('min'); try { localStorage.removeItem('loreMin'); } catch(e){} if (!loreText.textContent) loreGreet(); }
+  else if (loreCurrent) { openContent(loreCurrent); }
+  else loreMinimize();
+}
+function loreSay(text, done){
+  clearTimeout(loreTyping);
+  loreText.innerHTML = '<span class="cursor"></span>';
+  lore.classList.add('talking');
+  let i = 0;
+  (function tick(){
+    i += 2;
+    loreText.innerHTML = esc(text.slice(0, i)) + (i < text.length ? '<span class="cursor"></span>' : '');
+    if (i < text.length) loreTyping = setTimeout(tick, 22);
+    else { lore.classList.remove('talking'); if (done) done(); }
+  })();
+}
+function loreChips(active){
+  loreActions.innerHTML = LORE_MOODS.map(m => `<button class="lore-chip ${m.slug === active ? 'on' : ''}" onclick="lorePick('${m.slug}')">${esc(m.label)}</button>`).join('');
+}
+function loreShowPick(p, blurb){
+  loreCurrent = { id:p.id, title:p.title, genre:p.genre, year:p.year, rating:p.rating, overview:p.pitch, poster:p.poster, backdrop:'', region:'{{ region }}', avg:p.avg, votes:0, resume: p.resume ? 1000 : 0 };
+  lorePickEl.innerHTML = '';
+  loreActions.innerHTML = '';
+  loreSay(blurb, () => {
+    lorePickEl.innerHTML = `<div class="lore-pick">
+        <div class="pp" style="${p.poster ? `background-image:url('${esc(p.poster)}')` : ''}"></div>
+        <div><div class="pt">${esc(p.title)}</div>
+          <div class="pm">${esc(p.genre)} · ${p.year} · ${p.duration} min · ${esc(p.rating)}${p.avg ? ' · ★ ' + p.avg : ''}${p.unwatched === false ? ' · you’ve seen it' : ''}</div>
+          <div class="pitch">${esc(p.pitch)}</div></div></div>`;
+    loreActions.innerHTML = `
+      <button class="lore-chip primary" onclick="window.location.href='/play/${p.id}'">${p.resume ? '▶ Resume' : '▶ Play it'}</button>
+      <button class="lore-chip" onclick="openContent(loreCurrent)">Details</button>
+      ${loreMood ? `<button class="lore-chip" onclick="lorePick('${loreMood}')">Another one</button>` : ''}
+      <button class="lore-chip" onclick="loreGreet(true)">Different mood</button>`;
+  });
+}
+function lorePick(slug){
+  loreMood = slug;
+  const m = LORE_MOODS.find(x => x.slug === slug) || {};
+  lorePickEl.innerHTML = '';
+  loreChips(slug);
+  loreSay('Hmm, ' + (m.label || '').toLowerCase() + '...');
+  fetch('/bot/pick?mood=' + encodeURIComponent(slug) + '&exclude=' + loreShown.join(','))
+    .then(r => r.json())
+    .then(d => {
+      if (!d.pick) { loreSay("I'm out of ideas for that mood on this profile. Try another?"); loreChips(); return; }
+      loreShown.push(d.pick.id);
+      if (loreShown.length > 12) loreShown.shift();
+      loreShowPick(d.pick, d.blurb);
+    })
+    .catch(() => loreSay("My reel jammed. Try again in a second."));
+}
+function loreGreet(again){
+  loreMood = null; loreCurrent = null; lorePickEl.innerHTML = '';
+  if (again) { loreSay('Sure. How do you want to feel?', loreChips); return; }
+  loreSay(LORE_INTRO.text, () => {
+    if (LORE_INTRO.pick) {
+      const p = LORE_INTRO.pick;
+      loreCurrent = { id:p.id, title:p.title, genre:p.genre, year:p.year, rating:p.rating, overview:p.pitch, poster:p.poster, backdrop:'', region:'{{ region }}', avg:p.avg, votes:0, resume: p.resume ? 1000 : 0 };
+      loreActions.innerHTML = `<button class="lore-chip primary" onclick="window.location.href='/play/${p.id}'">${p.resume ? '▶ Resume ' : '▶ Play '}${esc(p.title)}</button>
+        <button class="lore-chip" onclick="loreGreet(true)">Something else</button>`;
+    } else loreChips();
+  });
+}
+try { if (localStorage.getItem('loreMin')) lore.classList.add('min'); } catch(e){}
+if (!lore.classList.contains('min')) setTimeout(loreGreet, 900);
+
+// ---- My List (watchlist) ----
+const myList = new Set({{ watchlist_ids | tojson }});
+let currentId = null;
+function paintListBtn(){
+  const b = document.getElementById('modal-list-btn');
+  const on = myList.has(currentId);
+  b.textContent = on ? '✓ In My List' : '+ My List';
+  b.style.borderColor = on ? 'rgba(248,113,113,0.6)' : '';
+}
+function toggleList(){
+  fetch('/watchlist/toggle', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({content_id: currentId})})
+    .then(r => r.json())
+    .then(d => { if (d.ok) { d.in_list ? myList.add(currentId) : myList.delete(currentId); paintListBtn(); } })
+    .catch(() => {});
+}
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function openBilling(){ document.getElementById('billing-modal').classList.add('open'); }
+
+// ---- Netflix-style search: results replace the rows as you type ----
+const searchBox   = document.getElementById('search');
+const searchInput = document.getElementById('search-input');
+const resultsSec  = document.getElementById('search-results');
+const resultsGrid = document.getElementById('results-grid');
+const resultsHead = document.getElementById('results-head');
+const rowsEl      = document.getElementById('rows');
+let searchTimer, searchSeq = 0, lastResults = [];
+
+function openSearch(){ searchBox.classList.add('open'); searchInput.focus(); }
+function clearSearch(){
+  searchInput.value = '';
+  searchBox.classList.remove('open', 'has-text');
+  resultsSec.classList.add('hidden');
+  rowsEl.classList.remove('hidden');
+}
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function renderResults(q, items){
+  lastResults = items;
+  resultsHead.innerHTML = items.length
+    ? `Results for <b>${esc(q)}</b> · ${items.length} title${items.length === 1 ? '' : 's'}`
+    : `No titles match <b>${esc(q)}</b>. Try a title, genre, language or year.`;
+  resultsGrid.innerHTML = items.map((t, i) => `
+    <div class="card" tabindex="0" onclick="openContent(lastResults[${i}])">
+      <div class="poster ${t.poster ? 'has-img' : ''}" style="background-color:#2c2c2f;${t.poster ? ` background-image:url('${esc(t.poster)}');` : ''}">
+        <span class="badge-region">${esc(t.region)}</span>
+        <span class="poster-label">${esc(t.title)}</span>
+      </div>
+      <div class="card-title">${esc(t.title)}</div>
+      <div class="card-meta">${esc(t.genre)} · ${t.year} · ${esc(t.rating)}${t.avg ? ' · ★ ' + t.avg : ''}</div>
+    </div>`).join('');
+  resultsSec.classList.remove('hidden');
+  rowsEl.classList.add('hidden');
+}
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim();
+  searchBox.classList.toggle('has-text', q.length > 0);
+  clearTimeout(searchTimer);
+  if (q.length < 2) { resultsSec.classList.add('hidden'); rowsEl.classList.remove('hidden'); return; }
+  const seq = ++searchSeq;
+  searchTimer = setTimeout(() => {
+    fetch('/search?q=' + encodeURIComponent(q))
+      .then(r => r.ok ? r.json() : [])
+      .then(items => { if (seq === searchSeq) renderResults(q, items); })
+      .catch(() => {});
+  }, 220);
+});
+searchInput.addEventListener('blur', () => { if (!searchInput.value.trim()) searchBox.classList.remove('open'); });
+document.addEventListener('keydown', e => {
+  const typing = ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName);
+  if (e.key === '/' && !typing) { e.preventDefault(); openSearch(); }
+  if (e.key === 'Escape') {
+    if (document.activeElement === searchInput) clearSearch();
+    document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open'));
+  }
+});
+
+document.querySelectorAll('.plan').forEach(p=>{
+  p.addEventListener('click', ()=>{
+    document.querySelectorAll('.plan').forEach(x=>x.classList.remove('selected'));
+    p.classList.add('selected');
+  });
+});
+
+// Star rating input
+document.querySelectorAll('#star-input span').forEach(star=>{
+  star.addEventListener('click', ()=>{
+    const v = star.dataset.v;
+    document.getElementById('rating-value').value = v;
+    document.querySelectorAll('#star-input span').forEach(s=>{
+      s.style.opacity = s.dataset.v <= v ? '1' : '0.3';
+    });
+  });
+});
+</script>
+</body>
+</html>
